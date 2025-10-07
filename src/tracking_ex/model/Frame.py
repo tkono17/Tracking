@@ -1,14 +1,13 @@
 from dataclasses import dataclass
 import math
+import numpy as np
 
 @dataclass
 class Frame:
-    p1: numpy.ndarray
-    p2: numpy.ndarray
+    p1: np.ndarray
+    p2: np.ndarray
     width: int
     height: int
-
-    def __post_init__(self):
 
 class FrameHelper:
     def __init__(self, frame):
@@ -16,8 +15,8 @@ class FrameHelper:
         #
         x1, y1 = self.frame.p1[0], self.frame.p1[1]
         x2, y2 = self.frame.p2[0], self.frame.p2[1]
-        self.pixelX = x2 - x1
-        self.pixelY = y2 - y1
+        self.pixelX = (x2 - x1)/self.frame.width
+        self.pixelY = (y2 - y1)/self.frame.height
 
     def toX(self, c):
         return self.frame.p1[0] + self.pixelX*(c+0.5)
@@ -59,4 +58,23 @@ class FrameHelper:
             p1 = line.position
             y2 = self.frame.p2[1]
             p2 = np.array([x2, y2*math.tan(line.theta)])
+
+    def createImage(self):
+        width = self.frame.width
+        height = self.frame.height
+        self.image = np.zeros(width*height).reshape( (width, height) )
+        return self.image
+    
+    def overlayLine(self, line, line_width=1):
+        a = math.tan(line.theta)
+        for c in range(self.frame.width):
+            x = self.toX(c)
+            y = line.position[1] + a*(x-line.position[0])
+            r = self.row(y)
+            c1 = c - int(line_width/2)
+            for cc in range(c1, c1+line_width):
+                if cc < 0 or cc >= self.frame.height: continue
+                self.image[r,cc] = 1
+        return self.image
+    
             
