@@ -53,7 +53,10 @@ class FrameHelper:
         if abs(line.theta)<1.0:
             p1 = line.position
             x2 = self.frame.p2[0]
-            p2 = np.array([x2, x2*math.tan(line.theta)])
+            noise = random.gaus(0.0, 2)
+            y = x2*math.tan(line.theta)+noise
+            y = int(y)
+            p2 = np.array([x2, y])
         else:
             p1 = line.position
             y2 = self.frame.p2[1]
@@ -62,7 +65,7 @@ class FrameHelper:
     def createImage(self):
         width = self.frame.width
         height = self.frame.height
-        self.image = np.zeros(width*height).reshape( (width, height) )
+        self.image = np.zeros(width*height, dtype=np.uint8).reshape( (width, height) )
         return self.image
     
     def overlayLine(self, line, line_width=1):

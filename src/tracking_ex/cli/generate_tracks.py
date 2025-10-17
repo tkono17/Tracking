@@ -8,41 +8,51 @@ from ..model import Frame, FrameHelper, Line2D
 
 app = typer.Typer()
 
-frame = Frame(p1=(0.0, -0.5), p2=(1.0, 0.5), width=100, height=100)
+nrows, ncols = 200, 200
+frame = Frame(p1=(0.0, -0.5), p2=(1.0, 0.5), width=ncols, height=nrows)
+
+def genTrack():
+    ptmin = 0.1
+    ptmax = 1.0E+6
+    thetamin = -0.5
+    thetamax = 0.5
+    theta = random.uniform(thetamin, thetamax)
+    y0 = random.uniform(-0.2, 0.2)
+    #
+    track = Line2D(np.array([0.0, y0]), theta)
+    return track
 
 @app.command('single')
 def generate_single_track(theta: Optional[float] = None,
                           y0: Optional[float] = None, 
                           figname: str = 'image'):
-    ptmin = 0.1
-    ptmax = 1.0E+6
-    thetamin = -0.5
-    thetamax = -0.5
-    if theta is None:
-        theta = random.uniform(thetamin, thetamax)
-    if y0 is None:
-        y0 = random.uniform(-0.2, 0.2)
-    #
-    track = Line2D(np.array([0.0, y0]), theta)
+    random.seed()
 
-    print(f'Frame = {frame}')
-    print(f'track = {track}')
-    
     frameHelper = FrameHelper(frame)
     frameHelper.createImage()
     detectorMask = frameHelper.image.copy()
 
-    for x in range(10, 100, 10):
-        detectorMask[0:100,x:x+2] = 1.0
-    
-    frameHelper.overlayLine(track)
+    x0 = int(ncols/10)
+    dx = int(ncols/50)
+    dx = 10
+    #x0, dx, xstep = 20, 10, 20
+    x0, dx, xstep = 20, 1, 5 # old
+    #x0, dx, xstep = 20, 1, 20 # current
+    x0, dx, xstep = 20, 1, 20 # new1
+    #x0, dx, xstep = 20, 3, 40 # new2
+    for x in range(x0, ncols, xstep):
+        detectorMask[0:ncols,x:x+dx] = 1
+
+    for i in range(10):
+        track = genTrack()
+        frameHelper.overlayLine(track)
     image0 = frameHelper.image
     image1 = image0*detectorMask
 
-    plt.imshow(image0)
+    plt.imshow(image0*200, cmap='GnBu')
     plt.savefig(f'{figname}_gen.jpg')
     
-    plt.imshow(image1)
+    plt.imshow(image1*200, cmap='GnBu')
     plt.savefig(f'{figname}_rec.jpg')
 
     plt.clf()
