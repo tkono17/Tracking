@@ -1,2 +1,2 @@
-from .Line import Line2D
+from .shapes import Line2D, Arc
 from .Frame import Frame, FrameHelper

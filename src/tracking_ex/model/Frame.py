@@ -80,4 +80,23 @@ class FrameHelper:
                 self.image[r,cc] = 1
         return self.image
     
-            
+    def overlayArc(self, arc, line_width=1):
+        theta = -arc.theta
+        ct, st = math.cos(theta), math.sin(theta)
+        pixelSize = (self.pixelX + self.pixelY)/2.0
+
+        c0, r0 = self.column(arc.origin[0]), self.row(arc.origin[1])
+        R = arc.radius/pixelSize
+        center = np.array([c0 + R*st, r0 - R*ct])
+        for c in range(c0, self.frame.width-1):
+            r = center[1]
+            dy2 = R*R - (c-center[0])**2
+            if dy2 >= 0:
+                if R >= 0:
+                    r += math.sqrt(dy2)
+                else:
+                    r -= math.sqrt(dy2)
+                r = int(r)
+                if r >= 0 and r < self.frame.height:
+                    self.image[r, c] = 1
+        
