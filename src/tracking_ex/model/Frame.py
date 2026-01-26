@@ -88,9 +88,12 @@ class FrameHelper:
         c0, r0 = self.column(arc.origin[0]), self.row(arc.origin[1])
         R = arc.radius/pixelSize
         center = np.array([c0 + R*st, r0 - R*ct])
+        cp, rp = c0, r0
+        done = False
         for c in range(c0, self.frame.width-1):
             r = center[1]
             dy2 = R*R - (c-center[0])**2
+            cscan = True
             if dy2 >= 0:
                 if R >= 0:
                     r += math.sqrt(dy2)
@@ -98,5 +101,36 @@ class FrameHelper:
                     r -= math.sqrt(dy2)
                 r = int(r)
                 if r >= 0 and r < self.frame.height:
-                    self.image[r, c] = 1
-        
+                    if abs(r-rp)<=1:
+                        self.image[r, c] = 1
+                        cp, rp = c, r
+                    else:
+                        cscan = False
+                else:
+                    done = True
+                    break
+            if not cscan:
+                c0, r0 = cp, rp
+                cp, rp = c0, r0
+                break
+        print(f'  column scan done: done={done}, cscan={cscan}')
+        if not done and not cscan:
+            rgen = range(r0, self.frame.height-1)
+            if R > 0:
+                rgen = range(r0, -1, -1)
+            for r in rgen:
+                c = center[0]
+                dx2 = R*R - (r-center[1])**2
+                c += math.sqrt(dx2)
+                c = int(c)
+                print(f'    (r, c)=({r}, {c})')
+                if c >= 0 and c < self.frame.width:
+                    if abs(c-cp)<=1:
+                        self.image[r, c] = 1
+                        cp, rp = c, r
+                    else:
+                        break
+                else:
+                    break
+        pass
+    
